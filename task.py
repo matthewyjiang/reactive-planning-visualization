@@ -6,11 +6,13 @@ class task():
     # phi: value function phi in R^d
     undecided_m = 10
     
-    def __init__(self, x, v_star, phi, grad):
+    def __init__(self, x, v_star, phi, grad, sigma=8, lambd=1):
         self.x = x
         self.v_star = v_star
         self.phi = phi
         self.grad = grad
+        self.sigma = sigma
+        self.lambd = lambd
         
     def get_phi(self, x):
         return self.phi(self.x, x)
