@@ -10,12 +10,7 @@ def phi(x, x0):
 def grad(x, x0):
     return x-x0
 
-def get_grad_sum(x, tasks):
-    res = np.zeros(len(x))
-    for t in tasks:
-        res += t.get_grad(x)
-    return res
-    
+
 
 if __name__ == "__main__":
     
