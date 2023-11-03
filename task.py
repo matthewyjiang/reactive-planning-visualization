@@ -4,9 +4,8 @@ class task():
     # x: coordinates x in R^d
     # v_star: value gain
     # phi: value function phi in R^d
-    undecided_m = 10
     
-    def __init__(self, x, v_star, phi, grad, sigma=8, lambd=1):
+    def __init__(self, x, v_star, phi, grad, sigma=8, lambd=0.01):
         self.x = x
         self.v_star = v_star
         self.phi = phi
