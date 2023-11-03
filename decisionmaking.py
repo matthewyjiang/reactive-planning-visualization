@@ -2,22 +2,28 @@ import numpy as np
 
 class pcm_model():
     
-    max_value = 10000
+    max_value = 1000
     
     def __init__(self):
         self.undecided_m = 1
-        self.tasks = []
+        self.tasks = np.array([])
+        self.sigma_array = np.array([])
+        self.v_star_array = np.array([])
         self.grads = []
-        self.motivations = []
-        self.values = []
+        self.motivations = np.array([])
+        self.values = np.array([])
         self.output_scale = 1
         self.epsilon = 0.0001
         
+        
     def add_task(self, task):
-        self.tasks.append(task)
+        self.tasks = np.append(self.tasks,task)
         self.grads.append(task.get_grad)
-        self.motivations.append(0)
-        self.values.append(0.001)
+        self.motivations = np.append(self.motivations, 0)
+        self.values = np.append(self.values, 0.001)
+        self.sigma_array = np.append(self.sigma_array, task.sigma)
+        self.v_star_array = np.append(self.v_star_array, task.v_star)
+
         
     def get_navigation_output(self, x):
         grads = np.array([g(x) for g in self.grads])
@@ -37,39 +43,27 @@ class pcm_model():
             self.undecided_m = 1.0  # Set undecided motivation to 1
     
     def update_motivation(self):
+
         epsilon = 1e-10  # A small number to prevent division by zero
-        for i in range(len(self.motivations)):
-            v = self.tasks[i].v_star*self.values[0]
-            epsilon = 1e-10
-            v_with_epsilon = np.maximum(v, epsilon)
+        v = np.array(self.v_star_array) * np.array(self.values)
+        v_with_epsilon = np.maximum(v, epsilon)
+        part1 = v * self.undecided_m
+        part2 = (1 / v_with_epsilon)
+        part3 = v * self.undecided_m
+        part4 = self.sigma_array * (1 - self.motivations - self.undecided_m)
+        motivation_change = part1 - self.motivations*(part2 - part3 + part4)
 
-            # Decompose the expression into smaller parts to identify where the invalid value might be generated
-            part1 = v * self.undecided_m
-            part2 = self.motivations[i] * (1 / v_with_epsilon)
-            part3 = self.motivations[i] * v * self.undecided_m
-            part4 = self.motivations[i] * self.tasks[i].sigma * (1 - self.motivations[i] - self.undecided_m)
+        # Preserve the total motivation
+        total_motivation = self.motivations.sum() + self.undecided_m
 
-            # Now assemble the parts with careful checks
-            motivation_change = part1 - (part2 - part3 + part4)
-                
-            if self.motivations[i] + motivation_change < 0:
-                self.undecided_m += self.motivations[i]
-                self.motivations[i] = 0
-            elif self.motivations[i] + motivation_change > 1:
-                self.undecided_m += 1 - self.motivations[i]
-                self.motivations[i] = 1
-            elif self.undecided_m - motivation_change < 0:
-                self.motivations[i] += self.undecided_m
-                self.undecided_m = 0
-            elif self.undecided_m - motivation_change > 1:
-                self.motivations[i] += 1 - self.undecided_m
-                self.undecided_m = 1
-            else:
-                self.motivations[i] += motivation_change
-                self.undecided_m -= motivation_change 
+        # Clip the motivation change to ensure values are between 0 and 1
+        motivation_change_clipped = np.clip(motivation_change, -self.motivations, 1 - self.motivations)
 
-            self.normalize_motivations()
-            #normalize
+        # Update motivations with the clipped changes
+        self.motivations += 0.1*motivation_change_clipped
+
+        # Adjust undecided_m to account for the clipped changes in motivations to preserve total motivation
+        self.undecided_m = total_motivation - self.motivations.sum()
             
             
     

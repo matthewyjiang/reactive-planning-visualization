@@ -5,7 +5,10 @@ class task():
     # v_star: value gain
     # phi: value function phi in R^d
     
-    def __init__(self, x, v_star, phi, grad, sigma=8, lambd=0.01):
+    # sigma how hard to commit to the task
+    # lambd time scale for value increase
+    
+    def __init__(self, x, v_star, phi, grad, sigma=32, lambd=0.005):
         self.x = x
         self.v_star = v_star
         self.phi = phi

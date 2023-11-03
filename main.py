@@ -13,11 +13,26 @@ tasks = []
 def phi(x, x0):
     return np.linalg.norm(x0-x)
 
+def phi2(x, x0):
+    return 200-np.linalg.norm(x0-x)
+
 def grad(x, x0):
     return x0-x
 
-tasks.append(task(np.array([600, 200]), 0.01, phi, grad))
-tasks.append(task(np.array([200, 400]), 0.01, phi, grad))
+def grad2(x, x0):
+    return x-x0
+
+
+def draw_vector(screen, position, vector, color):
+    # Scale the vector for better visualization
+    vector = vector*0.1
+    end_position = position + vector
+    pygame.draw.line(screen, color, position, end_position, 2)
+    # Optionally, you can add code here to draw the arrowhead
+
+tasks.append(task(np.array([600, 200]), 0.22, phi, grad))
+tasks.append(task(np.array([200, 200]), 0.2, phi, grad))
+# tasks.append(task(np.array([400, 200]), 0.2, phi2, grad2))
 
 model = pcm_model()
 
@@ -60,7 +75,7 @@ def main():
 
     # print robot coordinates using draw text
     font = pygame.font.SysFont(None, 36)
-
+    grid_spacing = 40
     # Run the game loop
     clock = pygame.time.Clock()
     while True:
@@ -84,8 +99,15 @@ def main():
         # Get robot coordinates
         robot_x = my_robot.get_coordinates()[0]
         # draw force vector
-        pygame.draw.line(screen, (0, 0, 0), my_robot.get_coordinates(), my_robot.get_coordinates()+model.get_navigation_output(my_robot.get_coordinates())*10)
+        # pygame.draw.line(screen, (0, 0, 0), my_robot.get_coordinates(), my_robot.get_coordinates()+model.get_navigation_output(my_robot.get_coordinates())*10)
         texts.clear()
+
+
+        for x in range(0, 800, grid_spacing):
+            for y in range(0, 600, grid_spacing):
+                gradient = model.get_navigation_output(np.array([x, y]))
+                draw_vector(screen, np.array([x, y]), gradient, (0, 0, 0))
+
 
         # Render text
         text = font.render("values X:" + str(np.round(model.values,2)),  1, (10, 10, 10))
